@@ -23,32 +23,25 @@ public class CookieModule
     public string GetCookie(ulong UserId)
     {
         string quote = string.Empty;
-
-        // User not exists in db
-        if(_db.Users.FirstOrDefault(u => u.Id == UserId) == null)
+        var user = _db.Users.FirstOrDefault(u => u.Id == UserId);
+        // User not exists or cookie not saved in db
+        if (user == null || user.Cookie == null)
         {
-            quote = GetRandomCookie(UserId);
-        }
-        // User exists in db
-        else if(_db.Users.FirstOrDefault(u => u.Id == UserId || u.Cookie == null) == null)
-        {
-            quote = GetRandomCookie(UserId);
+            quote = GetRandomCookie(user, UserId);
         }
         // User have saved cookie
         else
         {
-            quote = GetSavedCookie(UserId);
+            quote = GetSavedCookie(user);
         }
 
         return quote;
     }
 
-    private string GetRandomCookie(ulong UserId)
+    private string GetRandomCookie(UserModel user, ulong UserId)
     {
         int random = new Random().Next(cookies.Count);
         string cookie = cookies[random].Quote;
-
-        var user = _db.Users.FirstOrDefault(u => u.Id == UserId);
 
         // User exists
         if (user != null)
@@ -72,9 +65,8 @@ public class CookieModule
         return cookie;
     }
 
-    private string GetSavedCookie(ulong UserId)
+    private string GetSavedCookie(UserModel user)
     {
-        
-        return cookies[_db.Users.FirstOrDefault(u => u.Id == UserId).Cookie ?? 0].Quote;
+        return cookies[_db.Users.FirstOrDefault(u => u.Id == user.Id).Cookie ?? 0].Quote;
     }
 }
