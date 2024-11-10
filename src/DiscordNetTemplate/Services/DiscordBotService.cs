@@ -1,15 +1,17 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using DiscordNetTemplate.Modules;
+using Microsoft.Extensions.Hosting;
 
 namespace DiscordNetTemplate.Services;
 
 public class DiscordBotService(DiscordSocketClient client, InteractionService interactions, IConfiguration config, ILogger<DiscordBotService> logger,
-    InteractionHandler interactionHandler) : BackgroundService
+    InteractionHandler interactionHandler, TimerTasks timerTasks) : BackgroundService
 {
     protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
         client.Ready += ClientReady;
-
+        timerTasks.StartTasks();
         client.Log += LogAsync;
+        client.MessageReceived += MessageReceviedAsync;
         interactions.Log += LogAsync;
 
         return interactionHandler.InitializeAsync()
@@ -54,5 +56,11 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
         logger.Log(severity, msg.Exception, msg.Message);
 
         return Task.CompletedTask;
+    }
+
+    private async Task MessageReceviedAsync(SocketMessage message)
+    {
+        if (message.Author.Id != client.CurrentUser.Id)
+            logger.LogInformation(message.Content);
     }
 }

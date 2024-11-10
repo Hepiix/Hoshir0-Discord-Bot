@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordNetTemplate.Db;
@@ -20,14 +21,32 @@ public class CookieModule
         cookies = JsonConvert.DeserializeObject<List<FortuneCookie>>(File.ReadAllText("data/cookies.json"));
     }
 
-    public string GetCookie(ulong UserId)
+    public bool HasUserUsedCookie(ulong userId, ulong guildId)
+    {
+        var user = _db.Users.FirstOrDefault(u => u.Id == userId);
+        if (user != null)
+            if (user.CookieGuildIds.Contains(guildId))
+                return true;
+        else
+            return false;
+
+        return false;
+    }
+
+    public void SaveGuild(ulong userId, ulong guildId)
+    {
+        _db.Users.FirstOrDefault(u => u.Id == userId).CookieGuildIds.Add(guildId);
+        _db.SaveChangesAsync();
+    }
+
+    public string GetCookie(ulong userId)
     {
         string quote = string.Empty;
-        var user = _db.Users.FirstOrDefault(u => u.Id == UserId);
+        var user = _db.Users.FirstOrDefault(u => u.Id == userId);
         // User not exists or cookie not saved in db
         if (user == null || user.Cookie == null)
         {
-            quote = GetRandomCookie(user, UserId);
+            quote = GetRandomCookie(user, userId);
         }
         // User have saved cookie
         else
@@ -38,7 +57,7 @@ public class CookieModule
         return quote;
     }
 
-    private string GetRandomCookie(UserModel user, ulong UserId)
+    private string GetRandomCookie(UserModel user, ulong userId)
     {
         int random = new Random().Next(cookies.Count);
         string cookie = cookies[random].Quote;
@@ -54,7 +73,7 @@ public class CookieModule
         {
             user = new()
             {
-                Id = UserId,
+                Id = userId,
                 Cookie = random,
                 Tarot = null
             };

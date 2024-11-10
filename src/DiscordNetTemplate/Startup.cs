@@ -29,7 +29,7 @@ builder.Logging.AddSerilog(loggerConfig, dispose: true);
 builder.Services.AddSingleton(new DiscordSocketClient(
     new DiscordSocketConfig
     {
-        GatewayIntents = GatewayIntents.AllUnprivileged,
+        GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent,
         FormatUsersInBidirectionalUnicode = false,
         // Add GatewayIntents.GuildMembers to the GatewayIntents and change this to true if you want to download all users on startup
         AlwaysDownloadUsers = false,
@@ -44,6 +44,8 @@ builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<D
 
 builder.Services.AddSingleton<InteractionHandler>();
 builder.Services.AddScoped<CookieModule>();
+builder.Services.AddScoped<TimerService>();
+builder.Services.AddScoped<TimerTasks>();  
 
 builder.Services.AddDbContext<DatabaseBotContext>(options =>
     options.UseSqlite("Data Source=app.db"));

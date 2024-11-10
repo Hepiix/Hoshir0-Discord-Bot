@@ -19,8 +19,18 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("cookie", "Cookie")]
     public async Task CookieCommand()
     {
-        string respond = _cookie.GetCookie(Context.User.Id);
-        await RespondAsync(respond);
+        
+        if (_cookie.HasUserUsedCookie(Context.User.Id, Context.Guild.Id))
+        {
+            string respond = _cookie.GetCookie(Context.User.Id);
+            await RespondAsync(respond, ephemeral: true);
+        }
+        else
+        {
+            string respond = _cookie.GetCookie(Context.User.Id);
+            _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
+            await RespondAsync(respond);
+        } 
     }
 
     [SlashCommand("tarot", "Tarot")]
