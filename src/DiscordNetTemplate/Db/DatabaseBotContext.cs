@@ -21,4 +21,5 @@ public class DatabaseBotContext : DbContext
         optionsBuilder.UseSqlite();
     }
     public DbSet<UserModel> Users { get; set; }
+    public DbSet<GuildConfigModel> GuildConfigs { get; set; }
 }

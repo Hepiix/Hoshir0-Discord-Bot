@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace DiscordNetTemplate.Services;
 
@@ -33,6 +33,13 @@ public class InteractionHandler(DiscordSocketClient client, InteractionService i
     {
         if (!result.IsSuccess)
             _ = Task.Run(() => HandleInteractionExecutionResult(context.Interaction, result));
+        else
+        {
+            logger.LogInformation("Działa");
+            logger.LogInformation(result.ToString());
+            logger.LogInformation(command.ToString());
+            logger.LogInformation(context.ToString());
+        }
         return Task.CompletedTask;
     }
 

@@ -44,6 +44,7 @@ builder.Services.AddSingleton(x => new InteractionService(x.GetRequiredService<D
 
 builder.Services.AddSingleton<InteractionHandler>();
 builder.Services.AddScoped<CookieModule>();
+builder.Services.AddScoped<TarotModule>();
 builder.Services.AddScoped<TimerService>();
 builder.Services.AddScoped<TimerTasks>();  
 

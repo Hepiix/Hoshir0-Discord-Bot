@@ -25,7 +25,8 @@ public class TimerTasks
     public void StartTasks()
     {
         _logger.LogInformation("Registering tasks...");
-        _timerService.RegisterDailyTask(CookieClear, 12, 00);
+        _timerService.RegisterDailyTask(CookieClear, 11, 00);
+        _timerService.RegisterDailyTask(TarotClear, 23, 00);
     }
 
     public async Task CookieClear()
@@ -38,6 +39,21 @@ public class TimerTasks
             _botContext.Entry(user).Property(u => u.Cookie).IsModified = true;
             _botContext.Entry(user).Property(u => u.CookieGuildIds).IsModified = true;
         }
+        _botContext.SaveChangesAsync();
+        _logger.LogInformation("Db saved");
+    }
+
+    public async Task TarotClear()
+    {
+        foreach (var user in _botContext.Users)
+        {
+            user.Tarot = null;
+            user.TarotGuildIds = new List<ulong>();
+
+            _botContext.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
+            _botContext.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
+        }
+
         _botContext.SaveChangesAsync();
         _logger.LogInformation("Db saved");
     }
