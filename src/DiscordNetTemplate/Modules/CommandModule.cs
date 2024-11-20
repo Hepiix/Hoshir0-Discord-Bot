@@ -52,7 +52,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         }
     }
 
-    [RequireOwner]
+    [RequireTeam]
     [SlashCommand("admin", "Do not touch!")]
     public async Task AdminCommands(string command)
     {
