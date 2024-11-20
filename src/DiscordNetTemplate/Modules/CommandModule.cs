@@ -26,13 +26,14 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         if (_cookie.HasUserUsedCookie(Context.User.Id, Context.Guild.Id))
         {
             string respond = _cookie.GetCookie(Context.User.Id);
-            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”", ephemeral: true);
+            await DeferAsync();
+            await FollowupAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”", ephemeral: true);
         }
         else
         {
             string respond = _cookie.GetCookie(Context.User.Id);
             _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
-            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”");
+            await FollowupAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”");
         } 
     }
 
@@ -42,13 +43,15 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         if (_tarot.HasUserUsedTarot(Context.User.Id, Context.Guild.Id))
         {
             TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
-            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”", ephemeral: true);
+            await DeferAsync();
+            await FollowupWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”", ephemeral: true);
         }
         else
         {
             TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
             _tarot.SaveGuild(Context.User.Id, Context.Guild.Id);
-            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”");
+            await DeferAsync();
+            await FollowupWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”");
         }
     }
 
@@ -69,7 +72,8 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
             _db.SaveChangesAsync();
             _logger.LogInformation("Db saved");
-            await RespondAsync("Tarot cleared!", ephemeral: true);
+            await DeferAsync();
+            await FollowupAsync("Tarot cleared!", ephemeral: true);
         }
         else if (command == "cookie")
         {
@@ -83,11 +87,13 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
             }
             _db.SaveChangesAsync();
             _logger.LogInformation("Db saved");
-            await RespondAsync("Cookie cleared!", ephemeral: true);
+            await DeferAsync();
+            await FollowupAsync("Cookie cleared!", ephemeral: true);
         }
         else
         {
-            await RespondAsync("Command not recognized!", ephemeral: true);
+            await DeferAsync();
+            await FollowupAsync("Command not recognized!", ephemeral: true);
         }
     }
 
