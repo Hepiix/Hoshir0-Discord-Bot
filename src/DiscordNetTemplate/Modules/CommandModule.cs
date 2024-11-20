@@ -26,13 +26,13 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         if (_cookie.HasUserUsedCookie(Context.User.Id, Context.Guild.Id))
         {
             string respond = _cookie.GetCookie(Context.User.Id);
-            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!**\r\n\r\n> „*{respond}*”", ephemeral: true);
+            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”", ephemeral: true);
         }
         else
         {
             string respond = _cookie.GetCookie(Context.User.Id);
             _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
-            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!**\r\n\r\n> „*{respond}*”");
+            await RespondAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”");
         } 
     }
 
@@ -42,25 +42,53 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         if (_tarot.HasUserUsedTarot(Context.User.Id, Context.Guild.Id))
         {
             TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
-            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!**\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”", ephemeral: true);
+            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”", ephemeral: true);
         }
         else
         {
             TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
             _tarot.SaveGuild(Context.User.Id, Context.Guild.Id);
-            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!**\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”");
+            await RespondWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”");
         }
     }
-        
 
-    [SlashCommand("config", "Config")]
-    public async Task ConfigCommand()
-        => await RespondAsync("Config command");
-
-    [SlashCommand("test", "test")]
-    public async Task TestCommand()
+    [RequireOwner]
+    [SlashCommand("admin", "Do not touch!")]
+    public async Task AdminCommands(string command)
     {
-        await RespondAsync($"Saved!");
+        if (command == "tarot")
+        {
+            foreach (var user in _db.Users)
+            {
+                user.Tarot = null;
+                user.TarotGuildIds = new List<ulong>();
+
+                _db.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
+                _db.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
+            }
+
+            _db.SaveChangesAsync();
+            _logger.LogInformation("Db saved");
+            await RespondAsync("Tarot cleared!", ephemeral: true);
+        }
+        else if (command == "cookie")
+        {
+            foreach (var user in _db.Users)
+            {
+                user.Cookie = null;
+                user.CookieGuildIds = new List<ulong>();
+
+                _db.Entry(user).Property(u => u.Cookie).IsModified = true;
+                _db.Entry(user).Property(u => u.CookieGuildIds).IsModified = true;
+            }
+            _db.SaveChangesAsync();
+            _logger.LogInformation("Db saved");
+            await RespondAsync("Cookie cleared!", ephemeral: true);
+        }
+        else
+        {
+            await RespondAsync("Command not recognized!", ephemeral: true);
+        }
     }
 
 }
