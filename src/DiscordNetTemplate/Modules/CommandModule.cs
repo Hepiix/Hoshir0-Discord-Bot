@@ -25,12 +25,13 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         
         if (_cookie.HasUserUsedCookie(Context.User.Id, Context.Guild.Id))
         {
-            string respond = _cookie.GetCookie(Context.User.Id);
             await DeferAsync(ephemeral: true);
+            string respond = _cookie.GetCookie(Context.User.Id);
             await FollowupAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”", ephemeral: true);
         }
         else
         {
+            await DeferAsync();
             string respond = _cookie.GetCookie(Context.User.Id);
             _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
             await FollowupAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”");
@@ -42,15 +43,15 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         if (_tarot.HasUserUsedTarot(Context.User.Id, Context.Guild.Id))
         {
-            TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
             await DeferAsync(ephemeral: true);
+            TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
             await FollowupWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”", ephemeral: true);
         }
         else
         {
+            await DeferAsync();
             TarotCard respond = _tarot.GetTarotCard(Context.User.Id);
             _tarot.SaveGuild(Context.User.Id, Context.Guild.Id);
-            await DeferAsync();
             await FollowupWithFileAsync(filePath: $"{tarotPath}/{respond.Name}.png", text: $"**🃏 | Twoja karta tarota na dziś!** <@{Context.User.Id}>\r\n\r\n🎴 **Wylosowana karta:** **„{respond.Name}”**  \r\n> „*{respond.Description}*”");
         }
     }
@@ -59,6 +60,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("admin", "Do not touch!")]
     public async Task AdminCommands(string command)
     {
+        await DeferAsync(ephemeral: true);
         if (command == "tarot")
         {
             foreach (var user in _db.Users)
@@ -72,7 +74,6 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
             _db.SaveChangesAsync();
             _logger.LogInformation("Db saved");
-            await DeferAsync(ephemeral: true);
             await FollowupAsync("Tarot cleared!", ephemeral: true);
         }
         else if (command == "cookie")
@@ -87,12 +88,11 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
             }
             _db.SaveChangesAsync();
             _logger.LogInformation("Db saved");
-            await DeferAsync(ephemeral: true);
+            
             await FollowupAsync("Cookie cleared!", ephemeral: true);
         }
         else
         {
-            await DeferAsync(ephemeral: true);
             await FollowupAsync("Command not recognized!", ephemeral: true);
         }
     }
