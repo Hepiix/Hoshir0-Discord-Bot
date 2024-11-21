@@ -1,5 +1,6 @@
 ﻿using DiscordNetTemplate.Db;
 using DiscordNetTemplate.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DiscordNetTemplate.Modules;
 
@@ -63,32 +64,14 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         await DeferAsync(ephemeral: true);
         if (command == "tarot")
         {
-            foreach (var user in _db.Users)
-            {
-                user.Tarot = null;
-                user.TarotGuildIds = new List<ulong>();
-
-                _db.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
-                _db.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
-            }
-
+            _db.Database.ExecuteSqlRawAsync("UPDATE Users SET Tarot = NULL, TarotGuildIds = '[]'");
             _db.SaveChangesAsync();
-            _logger.LogInformation("Db saved");
             await FollowupAsync("Tarot cleared!", ephemeral: true);
         }
         else if (command == "cookie")
         {
-            foreach (var user in _db.Users)
-            {
-                user.Cookie = null;
-                user.CookieGuildIds = new List<ulong>();
-
-                _db.Entry(user).Property(u => u.Cookie).IsModified = true;
-                _db.Entry(user).Property(u => u.CookieGuildIds).IsModified = true;
-            }
+            _db.Database.ExecuteSqlRawAsync("UPDATE Users SET Cookie = NULL, CookieGuildIds = '[]'");
             _db.SaveChangesAsync();
-            _logger.LogInformation("Db saved");
-            
             await FollowupAsync("Cookie cleared!", ephemeral: true);
         }
         else

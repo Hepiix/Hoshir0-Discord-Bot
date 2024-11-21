@@ -31,29 +31,14 @@ public class TimerTasks
 
     public async Task CookieClear()
     {
-        foreach(var user in _botContext.Users)
-        {
-            user.Cookie = null;
-            user.CookieGuildIds = new List<ulong>();
-
-            _botContext.Entry(user).Property(u => u.Cookie).IsModified = true;
-            _botContext.Entry(user).Property(u => u.CookieGuildIds).IsModified = true;
-        }
+        _botContext.Database.ExecuteSqlRawAsync("UPDATE Users SET Cookie = NULL, CookieGuildIds = '[]'");
         _botContext.SaveChangesAsync();
         _logger.LogInformation("Db saved");
     }
 
     public async Task TarotClear()
     {
-        foreach (var user in _botContext.Users)
-        {
-            user.Tarot = null;
-            user.TarotGuildIds = new List<ulong>();
-
-            _botContext.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
-            _botContext.Entry(user).Property(u => u.TarotGuildIds).IsModified = true;
-        }
-
+        _botContext.Database.ExecuteSqlRawAsync("UPDATE Users SET Tarot = NULL, TarotGuildIds = '[]'");
         _botContext.SaveChangesAsync();
         _logger.LogInformation("Db saved");
     }
