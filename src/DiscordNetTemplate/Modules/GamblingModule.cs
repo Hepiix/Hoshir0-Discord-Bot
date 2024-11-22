@@ -9,15 +9,78 @@ namespace DiscordNetTemplate.Modules;
 
 public class GamblingModule
 {
-    private readonly DatabaseBotContext _botContext;
+    private readonly DatabaseBotContext _db;
 
     public GamblingModule(DatabaseBotContext botContext)
     {
-        _botContext = botContext;
+        _db = botContext;
     }
 
-    public void GiveMoney()
-    {
+    private readonly string[] symbols = { "🍒", "🍋", "🍎", "💎", "⭐" };
 
+    private readonly Dictionary<string, int> symbolValues = new Dictionary<string, int>
+    {
+        { "🍒", 2 },
+        { "🍋", 3 },
+        { "🍎", 4 },
+        { "💎", 7 },
+        { "⭐", 10 } 
+    };
+
+    public string[] GenerateFinalRoll()
+    {
+        var random = new Random();
+        string[] result = new string[3];
+
+        for (int i = 0; i < 3; i++)
+        {
+            result[i] = symbols[random.Next(symbols.Length)];
+        }
+
+        return result;
+    }
+
+    public string CheckWin(string[] finalRoll, int bet, ulong userId)
+    {
+        var symbolCount = finalRoll.GroupBy(s => s).ToDictionary(g => g.Key, g => g.Count());
+
+        if (symbolCount.Count == 1)
+        {
+            string winningSymbol = finalRoll[0];
+            int multiplier = symbolValues[winningSymbol] * 2;
+            bet *= multiplier;
+            _db.Users.FirstOrDefault(u => u.Id == userId).Money += bet;
+            return $"Gratulacje! Wszystkie symbole to {winningSymbol}! Wygrałeś {bet} żetonów!";
+        }
+
+        if (symbolCount.Count == 2)
+        {
+            var pairSymbol = symbolCount.FirstOrDefault(s => s.Value == 2).Key;
+            int multiplier = (int)Math.Round(symbolValues[pairSymbol] / 2f);
+            bet *= multiplier;
+            _db.Users.FirstOrDefault(u => u.Id == userId).Money += bet;
+            _db.SaveChangesAsync();
+            return $"Masz dwa takie same symbole! {pairSymbol} wygrywasz {bet} żetonów!";
+        }
+        return "Niestety, tym razem nic nie wygrałeś. Spróbuj ponownie!";
+    }
+
+    public string AddMoney(ulong userId, int money)
+    {
+        Random random = new Random();
+        double randomValue = random.NextDouble();
+
+        if (randomValue > 0.7)
+        {
+            _db.Users.FirstOrDefault(u => u.Id == userId).Money += money;
+            _db.SaveChangesAsync();
+            return $"Wygrałeś {money} żetonów!";
+        }
+        else
+        {
+            return "";
+        }
+
+        
     }
 }

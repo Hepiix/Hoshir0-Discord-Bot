@@ -46,7 +46,8 @@ builder.Services.AddSingleton<InteractionHandler>();
 builder.Services.AddScoped<CookieModule>();
 builder.Services.AddScoped<TarotModule>();
 builder.Services.AddScoped<TimerService>();
-builder.Services.AddScoped<TimerTasks>();  
+builder.Services.AddScoped<TimerTasks>();
+builder.Services.AddScoped<GamblingModule>();  
 
 builder.Services.AddDbContext<DatabaseBotContext>(options =>
     options.UseSqlite("Data Source=app.db"));
