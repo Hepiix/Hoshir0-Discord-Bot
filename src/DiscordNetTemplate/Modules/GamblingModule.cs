@@ -50,6 +50,7 @@ public class GamblingModule
             int multiplier = symbolValues[winningSymbol] * 2;
             bet *= multiplier;
             _db.Users.FirstOrDefault(u => u.Id == userId).Money += bet;
+            _db.SaveChangesAsync();
             return $"Gratulacje! Wszystkie symbole to {winningSymbol}! Wygrałeś {bet} żetonów!";
         }
 
