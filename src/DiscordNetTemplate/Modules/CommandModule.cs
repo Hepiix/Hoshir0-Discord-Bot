@@ -64,7 +64,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
     [RequireTeam]
     [SlashCommand("admin", "Do not touch!")]
-    public async Task AdminCommands(string command, string userId)
+    public async Task AdminCommands(string command)
     {
         await DeferAsync(ephemeral: true);
         if (command == "tarot")
@@ -112,6 +112,16 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync("Nie stać cię!");
             return;
         }
+        else if (bet == 0)
+        {
+            await FollowupAsync("Nie możesz postawić 0 żetonów!");
+            return;
+        }
+        else if (bet < 0)
+        {
+            await FollowupWithFileAsync(filePath: "data/kemoim_easteregg.jpg", text: "Nie bądź jak Kemoim, nie stawiaj beta na minusie!");
+            return;
+        }
         else
         {
             user.Money -= bet;
@@ -121,23 +131,44 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
         string[] result = new string[3] { "<a:slot:1309190616755732561>", "<a:slot:1309190616755732561>", "<a:slot:1309190616755732561>" };
 
-        string initialResult = $"🎰 {result[0]} | {result[1]} | {result[2]} <@{Context.User.Id}>";
+        string initialResult = $"🎰 {result[0]} | {result[1]} | {result[2]} | :moneybag:: {bet} | <@{Context.User.Id}>";
         await ModifyOriginalResponseAsync(msg => msg.Content = initialResult);
-
+        await Task.Delay(1000);
         for (int i = 0; i < 3; i++)
         {
             result[i] = _slot.GenerateFinalRoll()[i];
 
-            string updatedResult = $"🎰 {result[0]} | {result[1]} | {result[2]} <@{Context.User.Id}>";
+            string updatedResult = $"🎰 {result[0]} | {result[1]} | {result[2]} | :moneybag:: {bet} | <@{Context.User.Id}>";
             await ModifyOriginalResponseAsync(msg => msg.Content = updatedResult);
 
             await Task.Delay(1000);
         }
 
-        string finalRoll = $"{result[0]} | {result[1]} | {result[2]} <@{Context.User.Id}>";
+        string finalRoll = $"{result[0]} | {result[1]} | {result[2]} | :moneybag:: {bet} | <@{Context.User.Id}>";
 
         string winMessage = _slot.CheckWin(result, bet, Context.User.Id);
 
         await ModifyOriginalResponseAsync(msg => msg.Content = $"🎰 {finalRoll}\n{winMessage}");
     }
+
+    //[SlashCommand("test", "test")]
+    //public async Task TestCommand()
+    //{
+    //    var embed = new EmbedBuilder()
+    //    .WithTitle("Configuration Menu")
+    //    .WithDescription("React to this message with your choice:\n\n" +
+    //                     "1️⃣ **Change Prefix**\n" +
+    //                     "2️⃣ **Set Welcome Channel**\n" +
+    //                     "3️⃣ **Enable/Disable Features**\n" +
+    //                     "4️⃣ **View Current Settings**")
+    //    .WithColor(Color.Gold)
+    //    .WithFooter("React with the corresponding emoji to select an option.")
+    //    .Build();
+
+    //    await RespondAsync(embed: embed);
+
+    //    var sentMessage = await Context.Interaction.GetOriginalResponseAsync();
+
+    //    sentMessage.AddReactionsAsync([new Emoji("1️⃣"), new Emoji("2️⃣"), new Emoji("3️⃣"), new Emoji("4️⃣")]);
+    //}
 }

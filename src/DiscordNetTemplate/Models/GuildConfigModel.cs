@@ -9,7 +9,6 @@ namespace DiscordNetTemplate.Models;
 public class GuildConfigModel
 {
     public ulong Id { get; set; }
-    public ulong AnimeInfoChannelId { get; set; }
-    public bool AntiSpam { get; set; }
-    public bool Gambling { get; set; }
+    public ulong? AnimeInfoChannelId { get; set; }
+    public ulong? GamblingChannel {  get; set; }
 }

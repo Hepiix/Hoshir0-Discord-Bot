@@ -1,10 +1,12 @@
-﻿using DiscordNetTemplate.Modules;
+﻿using DiscordNetTemplate.Db;
+using DiscordNetTemplate.Modules;
 using Microsoft.Extensions.Hosting;
+using DiscordNetTemplate.Models;
 
 namespace DiscordNetTemplate.Services;
 
 public class DiscordBotService(DiscordSocketClient client, InteractionService interactions, IConfiguration config, ILogger<DiscordBotService> logger,
-    InteractionHandler interactionHandler, TimerTasks timerTasks) : BackgroundService
+    InteractionHandler interactionHandler, TimerTasks timerTasks, DatabaseBotContext db) : BackgroundService
 {
     protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -13,6 +15,7 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
         timerTasks.StartTasks();
         client.Log += LogAsync;
         client.MessageReceived += MessageReceviedAsync;
+        client.JoinedGuild += OnGuildJoin;
         interactions.Log += LogAsync;
 
         return interactionHandler.InitializeAsync()
@@ -63,5 +66,25 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
     {
         if (message.Author.Id != client.CurrentUser.Id)
             logger.LogInformation(message.Content);
+    }
+
+    private async Task OnGuildJoin(SocketGuild guild)
+    {
+        if (db.GuildConfigs.FirstOrDefault(g => g.Id == guild.Id) == null)
+        {
+            GuildConfigModel guildModel = new()
+            {
+                Id = guild.Id,
+                AnimeInfoChannelId = null,
+                GamblingChannel = null
+            };
+            db.GuildConfigs.Add(guildModel);
+            db.SaveChangesAsync();
+            logger.LogInformation($"Added to database!");
+        }
+        else
+        {
+            logger.LogInformation("Already in database!");
+        }
     }
 }
