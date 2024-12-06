@@ -11,7 +11,7 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
     protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
         client.Ready += ClientReady;
-        client.SetGameAsync("Las Vegas 🎰");
+        client.SetGameAsync("Las Vegas 🎰 /config");
         timerTasks.StartTasks();
         client.Log += LogAsync;
         client.MessageReceived += MessageReceviedAsync;
