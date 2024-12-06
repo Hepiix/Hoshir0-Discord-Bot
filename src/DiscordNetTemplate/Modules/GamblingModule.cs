@@ -17,16 +17,16 @@ public class GamblingModule
         _db = botContext;
     }
 
-    private readonly string[] symbols = { "🍒", "🍒", "🍒", "🍒", "🍋", "🍋", "🍎", "🍎", ":strawberry:", ":strawberry:", "💎", "⭐" };
+    private readonly string[] symbols = { "🍒", "🍒", "🍒", "🍋", "🍋", "🍎", "🍎", ":strawberry:", ":strawberry:", "💎", "⭐" };
 
     private readonly Dictionary<string, int> symbolValues = new Dictionary<string, int>
     {
         { "🍒", 2 },
-        { ":strawberry:", 3 },
-        { "🍋", 3 },
-        { "🍎", 4 },
-        { "💎", 10 },
-        { "⭐", 7 } 
+        { ":strawberry:", 4 },
+        { "🍋", 4 },
+        { "🍎", 6 },
+        { "💎", 14 },
+        { "⭐", 10 } 
     };
 
     public string[] GenerateFinalRoll()

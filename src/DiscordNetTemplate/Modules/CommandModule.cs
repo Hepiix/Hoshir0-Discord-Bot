@@ -1,4 +1,6 @@
-﻿using Discord.Commands;
+﻿using System.Reflection.Emit;
+using Discord;
+using Discord.Commands;
 using DiscordNetTemplate.Db;
 using DiscordNetTemplate.Models;
 using Microsoft.EntityFrameworkCore;
@@ -11,16 +13,18 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     private readonly DatabaseBotContext _db;
     private readonly CookieModule _cookie;
     private readonly TarotModule _tarot;
+    private readonly ConfigModule _config;
     private readonly GamblingModule _slot;
     private readonly string tarotPath = "data/tarotphotos";
 
-    public CommandModule(ILogger<CommandModule> logger, DatabaseBotContext db, CookieModule cookie, TarotModule tarot, GamblingModule slot)
+    public CommandModule(ILogger<CommandModule> logger, DatabaseBotContext db, CookieModule cookie, TarotModule tarot, GamblingModule slot, ConfigModule config)
     {
         _logger = logger;
         _db = db;
         _cookie = cookie;
         _tarot = tarot;
         _slot = slot;
+        _config = config;
     }
 
     [SlashCommand("cookie", "Cookie")]
@@ -105,6 +109,12 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("slot", "Slots!")]
     public async Task SlotCommand(int bet)
     {
+        if (_config.CheckIfGamblingAllowed(Context.Guild.Id, Context.Channel.Id) is false)
+        {
+            await DeferAsync(ephemeral: true);
+            await FollowupAsync("Zakaz gamblowania!");
+            return;
+        }
         await DeferAsync();
         var user = _db.Users.FirstOrDefault(u => u.Id == Context.User.Id);
         if (user == null || user.Money < bet || user.Money == 0)
@@ -151,24 +161,56 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         await ModifyOriginalResponseAsync(msg => msg.Content = $"🎰 {finalRoll}\n{winMessage}");
     }
 
-    //[SlashCommand("test", "test")]
-    //public async Task TestCommand()
-    //{
-    //    var embed = new EmbedBuilder()
-    //    .WithTitle("Configuration Menu")
-    //    .WithDescription("React to this message with your choice:\n\n" +
-    //                     "1️⃣ **Change Prefix**\n" +
-    //                     "2️⃣ **Set Welcome Channel**\n" +
-    //                     "3️⃣ **Enable/Disable Features**\n" +
-    //                     "4️⃣ **View Current Settings**")
-    //    .WithColor(Color.Gold)
-    //    .WithFooter("React with the corresponding emoji to select an option.")
-    //    .Build();
+    [SlashCommand("config", "Configuration command!")]
+    public async Task ConfigMenu()
+    {
+        var embedBuilder = new EmbedBuilder()
+            .WithTitle("Konfiguracja bota:")
+            .WithDescription(":one: Pierwsze menu to ustawienie na jakim kanale będzie odbywać się gambling oraz eventy gamblingowe.")
+            .WithColor(Color.Red);
 
-    //    await RespondAsync(embed: embed);
+        var gamblingMenu = new SelectMenuBuilder()
+            .WithPlaceholder("Gambling!")
+            .WithCustomId("gamblingMenu");
 
-    //    var sentMessage = await Context.Interaction.GetOriginalResponseAsync();
+        var animeInfoMenu = new SelectMenuBuilder()
+            .WithPlaceholder("Anime Info!")
+            .WithCustomId("animeInfo");
 
-    //    sentMessage.AddReactionsAsync([new Emoji("1️⃣"), new Emoji("2️⃣"), new Emoji("3️⃣"), new Emoji("4️⃣")]);
-    //}
+        foreach (var channel in Context.Guild.Channels)
+        {
+            Console.WriteLine(channel.GetType());
+
+            if (channel.GetChannelType() is ChannelType.Text)
+            {
+                SelectMenuOptionBuilder item = new()
+                {
+                    Label = channel.Name,
+                    Value = $"{channel.Id}"
+                };
+                gamblingMenu.Options.Add(item);
+                animeInfoMenu.Options.Add(item);
+            }
+        }
+
+        gamblingMenu.Options.Add(new SelectMenuOptionBuilder
+        {
+            Label = "Wyłącz",
+            Value = "0"
+        });
+
+        var component = new ComponentBuilder()
+            .WithSelectMenu(gamblingMenu);
+
+        await RespondAsync(components: component.Build(), embed: embedBuilder.Build(), ephemeral:true);
+
+        var sentMessage = await Context.Interaction.GetOriginalResponseAsync();
+    }
+
+    [ComponentInteraction("gamblingMenu")]
+    public async Task GamblingMenuSelect(string[] options)
+    {
+        _config.SaveGamblingChannel(Context.Guild.Id, Convert.ToUInt64(options[0]));
+        await RespondAsync($"Zapisano!", ephemeral:true);
+    }
 }

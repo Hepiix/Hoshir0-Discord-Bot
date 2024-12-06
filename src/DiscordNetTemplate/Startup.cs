@@ -48,6 +48,7 @@ builder.Services.AddScoped<TarotModule>();
 builder.Services.AddScoped<TimerService>();
 builder.Services.AddScoped<TimerTasks>();
 builder.Services.AddScoped<GamblingModule>();  
+builder.Services.AddScoped<ConfigModule>();
 
 builder.Services.AddDbContext<DatabaseBotContext>(options =>
     options.UseSqlite("Data Source=app.db"));
