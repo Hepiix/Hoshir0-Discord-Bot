@@ -117,7 +117,14 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [SlashCommand("slot", "Slots!")]
-    public async Task SlotCommand(int bet)
+    public async Task SlotCommand([Discord.Interactions.Summary("bet", "Wybierz wysokość beta!")]
+        [Choice("25", 25)]
+        [Choice("50", 50)]
+        [Choice("100", 100)]
+        [Choice("250", 250)]
+        [Choice("500", 500)]
+        [Choice("1000", 1000)]
+        int bet)
     {
         if (_config.CheckIfGamblingAllowed(Context.Guild.Id, Context.Channel.Id) is false)
         {
