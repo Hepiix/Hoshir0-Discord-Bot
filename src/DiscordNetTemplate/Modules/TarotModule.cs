@@ -81,4 +81,11 @@ public class TarotModule
     {
         return _cards[_db.Users.FirstOrDefault(u => u.Id == user.Id).Tarot ?? 0];
     }
+
+    public string GetTarotCardName (int cardId)
+    {
+        if (cardId == -1)
+            return "Brak";
+        return _cards[cardId].Name;
+    }
 }

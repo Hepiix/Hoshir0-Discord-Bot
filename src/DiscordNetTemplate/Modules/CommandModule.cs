@@ -102,7 +102,17 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         }
         else
         {
-            await FollowupAsync($"{Context.User.Username}\nŻetony: {user.Money}");
+            var embed = new EmbedBuilder
+            {
+                Title = "Hello world!",
+                Description = "I am a description set by initializer."
+            };
+            embed.WithColor(Color.Magenta)
+                .WithTitle($"{Context.User.GlobalName}")
+                .WithDescription($"Żetony: {user.Money}\nTarot: {_tarot.GetTarotCardName(user.Tarot ?? -1)}\nCiasteczko: {_cookie.GetCookieName(user.Cookie ?? -1)}")
+                .WithThumbnailUrl(Context.User.GetAvatarUrl());
+
+            await FollowupAsync(embed: embed.Build());
         }
     }
 
@@ -161,6 +171,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         await ModifyOriginalResponseAsync(msg => msg.Content = $"🎰 {finalRoll}\n{winMessage}");
     }
 
+    [Discord.Commands.RequireUserPermission(GuildPermission.Administrator)]
     [SlashCommand("config", "Configuration command!")]
     public async Task ConfigMenu()
     {

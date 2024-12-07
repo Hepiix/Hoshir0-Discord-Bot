@@ -88,4 +88,11 @@ public class CookieModule
     {
         return cookies[_db.Users.FirstOrDefault(u => u.Id == user.Id).Cookie ?? 0].Quote;
     }
+
+    public string GetCookieName(int cookieId)
+    {
+        if (cookieId == -1)
+            return "Brak";
+        return cookies[cookieId].Quote;
+    }
 }
