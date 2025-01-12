@@ -80,10 +80,6 @@ public class GamblingModule
             return $"Wygrałeś {money} żetonów!";
         }
         else
-        {
             return "";
-        }
-
-        
     }
 }

@@ -41,8 +41,8 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         {
             await DeferAsync();
             string respond = _cookie.GetCookie(Context.User.Id);
-            _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
             string win = _slot.AddMoney(Context.User.Id, 50);
+            _cookie.SaveGuild(Context.User.Id, Context.Guild.Id);
             await FollowupAsync($"**\U0001f960 | Twoja wróżba z chińskiego ciasteczka!** <@{Context.User.Id}>\r\n\r\n> „*{respond}*”\n{win}");
         } 
     }
@@ -66,29 +66,6 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         }
     }
 
-    [RequireTeam]
-    [SlashCommand("admin", "Do not touch!")]
-    public async Task AdminCommands(string command)
-    {
-        await DeferAsync(ephemeral: true);
-        if (command == "tarot")
-        {
-            _db.Database.ExecuteSqlRawAsync("UPDATE Users SET Tarot = NULL, TarotGuildIds = '[]'");
-            _db.SaveChangesAsync();
-            await FollowupAsync("Tarot cleared!", ephemeral: true);
-        }
-        else if (command == "cookie")
-        {
-            _db.Database.ExecuteSqlRawAsync("UPDATE Users SET Cookie = NULL, CookieGuildIds = '[]'");
-            _db.SaveChangesAsync();
-            await FollowupAsync("Cookie cleared!", ephemeral: true);
-        }
-        else
-        {
-            await FollowupAsync("Command not recognized!", ephemeral: true);
-        }
-    }
-
     [SlashCommand("profile", "Profile")]
     public async Task ProfileCommand()
     {
@@ -102,11 +79,8 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         }
         else
         {
-            var embed = new EmbedBuilder
-            {
-                Title = "Hello world!",
-                Description = "I am a description set by initializer."
-            };
+            var embed = new EmbedBuilder();
+
             embed.WithColor(Color.Magenta)
                 .WithTitle($"{Context.User.GlobalName}")
                 .WithDescription($"Żetony: {user.Money}\nTarot: {_tarot.GetTarotCardName(user.Tarot ?? -1)}\nCiasteczko: {_cookie.GetCookieName(user.Cookie ?? -1)}")
@@ -184,7 +158,8 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         var embedBuilder = new EmbedBuilder()
             .WithTitle("Konfiguracja bota:")
-            .WithDescription(":one: Pierwsze menu to ustawienie na jakim kanale będzie odbywać się gambling oraz eventy gamblingowe.")
+            .WithDescription(":one: Pierwsze menu to ustawienie na jakim kanale będzie odbywać się gambling oraz eventy gamblingowe.\n" +
+            ":two: Drugie menu to ustawienie na jakim kanale będą wysyłane newsy z anime.")
             .WithColor(Color.Red);
 
         var gamblingMenu = new SelectMenuBuilder()
@@ -193,7 +168,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
         var animeInfoMenu = new SelectMenuBuilder()
             .WithPlaceholder("Anime Info!")
-            .WithCustomId("animeInfo");
+            .WithCustomId("animeInfoMenu");
 
         foreach (var channel in Context.Guild.Channels)
         {
@@ -218,7 +193,8 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         });
 
         var component = new ComponentBuilder()
-            .WithSelectMenu(gamblingMenu);
+            .WithSelectMenu(gamblingMenu)
+            .WithSelectMenu(animeInfoMenu);
 
         await RespondAsync(components: component.Build(), embed: embedBuilder.Build(), ephemeral:true);
 
@@ -230,5 +206,12 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     {
         _config.SaveGamblingChannel(Context.Guild.Id, Convert.ToUInt64(options[0]));
         await RespondAsync($"Zapisano!", ephemeral:true);
+    }
+
+    [ComponentInteraction("animeInfoMenu")]
+    public async Task AnimeMenuSelect(string[] options)
+    {
+        _config.SaveAnimeInfoChannel(Context.Guild.Id, Convert.ToUInt64(options[0]));
+        await RespondAsync("Zapisano!", ephemeral:true);
     }
 }

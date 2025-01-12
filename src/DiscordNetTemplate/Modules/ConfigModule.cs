@@ -34,6 +34,25 @@ namespace DiscordNetTemplate.Modules
             {
                 guild.GamblingChannel = channelId;
             }
+            
+            _db.SaveChangesAsync();
+        }
+
+        public void SaveAnimeInfoChannel(ulong guildId, ulong channelId)
+        {
+            var guild = _db.GuildConfigs.FirstOrDefault(u => u.Id == guildId);
+            if (guild == null)
+            {
+                GuildConfigModel model = new()
+                {
+                    Id = guildId,
+                    AnimeInfoChannelId = channelId
+                };
+
+                _db.GuildConfigs.Add(model);
+            }
+            else
+                guild.AnimeInfoChannelId = channelId;
             _db.SaveChangesAsync();
         }
 
