@@ -53,7 +53,7 @@ public class TimerTasks
     {
         AnimeNews news = await GetAnimeNews("https://www.animenewsnetwork.com/all/atom.xml?ann-edition=us");
 
-        if (news == null || (DateTime.UtcNow - news.Published).TotalMinutes > 10)
+        if (news == null || (DateTime.UtcNow - news.Published).TotalMinutes >= 10)
         {
             return;
         }
