@@ -192,6 +192,12 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
             Value = "0"
         });
 
+        animeInfoMenu.Options.Add(new SelectMenuOptionBuilder
+        {
+            Label = "Wyłącz",
+            Value = "0"
+        });
+
         var component = new ComponentBuilder()
             .WithSelectMenu(gamblingMenu)
             .WithSelectMenu(animeInfoMenu);
