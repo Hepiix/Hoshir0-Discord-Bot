@@ -33,8 +33,7 @@ This is a Discord bot built in **C# .NET** using the **Discord.NET** library. It
 
 ## 🚀 Live Demo
 
-Try out the bot live: **[Invite Link](https://your-bot-invite-link.com)**  
-> *(Replace with your actual bot invite URL before sharing.)*
+Try out the bot live: **[Invite Link](https://discord.com/oauth2/authorize?client_id=1305230033190785074)**  
 
 ## 🤝 Contributions
 
