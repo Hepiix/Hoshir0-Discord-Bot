@@ -1,42 +1,69 @@
 ﻿using DiscordNetTemplate.Db;
-using DiscordNetTemplate.Modules;
-using Microsoft.Extensions.Hosting;
 using DiscordNetTemplate.Models;
+using DiscordNetTemplate.Modules;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace DiscordNetTemplate.Services;
 
-public class DiscordBotService(DiscordSocketClient client, InteractionService interactions, IConfiguration config, ILogger<DiscordBotService> logger,
-    InteractionHandler interactionHandler, TimerTasks timerTasks, DatabaseBotContext db) : BackgroundService
+public class DiscordBotService : BackgroundService
 {
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        private readonly DiscordSocketClient _client;
+        private readonly InteractionService _interactions;
+        private readonly IConfiguration _config;
+        private readonly ILogger<DiscordBotService> _logger;
+        private readonly InteractionHandler _interactionHandler;
+        private readonly IServiceProvider _serviceProvider;
+    public DiscordBotService(
+                DiscordSocketClient client,
+                InteractionService interactions,
+                IConfiguration config,
+                ILogger<DiscordBotService> logger,
+                InteractionHandler interactionHandler,
+                IServiceProvider serviceProvider)
+            {
+                _client = client;
+                _interactions = interactions;
+                _config = config;
+                _logger = logger;
+                _interactionHandler = interactionHandler;
+                _serviceProvider = serviceProvider;
+            }
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        client.Ready += ClientReady;
-        client.SetGameAsync("Las Vegas 🎰 /config");
-        timerTasks.StartTasks();
-        client.Log += LogAsync;
-        client.MessageReceived += MessageReceviedAsync;
-        client.JoinedGuild += OnGuildJoin;
-        interactions.Log += LogAsync;
+        _client.Ready += ClientReady;
+        await _client.SetGameAsync("Las Vegas 🎰 /config");
+        _client.Log += LogAsync;
+        _client.MessageReceived += MessageReceviedAsync;
+        _client.JoinedGuild += OnGuildJoin;
+        _interactions.Log += LogAsync;
 
-        return interactionHandler.InitializeAsync()
-            .ContinueWith(t => client.LoginAsync(TokenType.Bot, config["Secrets:Discord"]), cancellationToken)
-            .ContinueWith(t => client.StartAsync(), cancellationToken);
+        await _interactionHandler.InitializeAsync();
+
+        using var scope = _serviceProvider.CreateScope();
+        var timerTasks = scope.ServiceProvider.GetRequiredService<TimerTasks>();
+        timerTasks.StartTasks();
+
+        await _client.LoginAsync(TokenType.Bot, _config["Secrets:Discord"]);
+        await _client.StartAsync();
+
+        // Możesz tu dodać pętlę jeśli chcesz np. cykliczne zadania,
+        // albo po prostu czekać na zatrzymanie usługi:
+        await Task.Delay(-1, stoppingToken);
     }
 
-    public override Task StopAsync(CancellationToken cancellationToken)
+    public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        if (ExecuteTask is null)
-            return Task.CompletedTask;
-
-        base.StopAsync(cancellationToken);
-        return client.StopAsync();
+        await _client.StopAsync();
+        await base.StopAsync(cancellationToken);
     }
 
     private async Task ClientReady()
     {
-        logger.LogInformation("Logged as {User}", client.CurrentUser);
+        _logger.LogInformation("Logged as {User}", _client.CurrentUser);
 
-        await interactions.RegisterCommandsGloballyAsync();
+        await _interactions.RegisterCommandsGloballyAsync();
     }
 
     public Task MessageAsync(SocketMessage message)
@@ -57,20 +84,24 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
             _ => LogLevel.Information
         };
 
-        logger.Log(severity, msg.Exception, msg.Message);
+        _logger.Log(severity, msg.Exception, msg.Message);
 
         return Task.CompletedTask;
     }
 
     private async Task MessageReceviedAsync(SocketMessage message)
     {
-        if (message.Author.Id != client.CurrentUser.Id)
-            logger.LogInformation(message.Content);
+        if (message.Author.Id != _client.CurrentUser.Id)
+            _logger.LogInformation(message.Content);
     }
 
     private async Task OnGuildJoin(SocketGuild guild)
     {
-        if (db.GuildConfigs.FirstOrDefault(g => g.Id == guild.Id) == null)
+        using var scope = _serviceProvider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DatabaseBotContext>();
+
+        var existing = await db.GuildConfigs.FirstOrDefaultAsync(g => g.Id == guild.Id);
+        if (existing == null)
         {
             GuildConfigModel guildModel = new()
             {
@@ -79,12 +110,12 @@ public class DiscordBotService(DiscordSocketClient client, InteractionService in
                 GamblingChannel = null
             };
             db.GuildConfigs.Add(guildModel);
-            db.SaveChangesAsync();
-            logger.LogInformation($"Added to database!");
+            await db.SaveChangesAsync();
+            _logger.LogInformation($"Added to database!");
         }
         else
         {
-            logger.LogInformation("Already in database!");
+            _logger.LogInformation("Already in database!");
         }
     }
 }

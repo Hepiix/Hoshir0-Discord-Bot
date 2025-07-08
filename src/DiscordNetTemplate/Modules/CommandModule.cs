@@ -27,7 +27,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         _config = config;
     }
 
-    [SlashCommand("cookie", "Cookie")]
+    [SlashCommand("cookie", "Ciasteczko z wróżbą")]
     public async Task CookieCommand()
     {
         
@@ -47,7 +47,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         } 
     }
 
-    [SlashCommand("tarot", "Tarot")]
+    [SlashCommand("tarot", "Karta dnia tarota")]
     public async Task TarotCommand()
     {
         if (_tarot.HasUserUsedTarot(Context.User.Id, Context.Guild.Id))
@@ -66,7 +66,7 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
         }
     }
 
-    [SlashCommand("profile", "Profile")]
+    [SlashCommand("profile", "Twój profil")]
     public async Task ProfileCommand()
     {
         await DeferAsync(ephemeral:true);
@@ -92,12 +92,19 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
 
     [SlashCommand("slot", "Slots!")]
     public async Task SlotCommand([Discord.Interactions.Summary("bet", "Wybierz wysokość beta!")]
+        [Choice("5", 5)]
+        [Choice("10", 10)]
         [Choice("25", 25)]
         [Choice("50", 50)]
         [Choice("100", 100)]
         [Choice("250", 250)]
         [Choice("500", 500)]
         [Choice("1000", 1000)]
+        [Choice("5000", 5000)]
+        [Choice("10000", 10000)]
+        [Choice("25000", 25000)]
+        [Choice("50000", 50000)]
+        [Choice("100000", 100000)]
         int bet)
     {
         if (_config.CheckIfGamblingAllowed(Context.Guild.Id, Context.Channel.Id) is false)
@@ -153,13 +160,13 @@ public class CommandModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [Discord.Commands.RequireUserPermission(GuildPermission.Administrator)]
-    [SlashCommand("config", "Configuration command!")]
+    [SlashCommand("config", "Ustawienia serwera")]
     public async Task ConfigMenu()
     {
         var embedBuilder = new EmbedBuilder()
             .WithTitle("Konfiguracja bota:")
             .WithDescription(":one: Pierwsze menu to ustawienie na jakim kanale będzie odbywać się gambling oraz eventy gamblingowe.\n" +
-            ":two: Drugie menu to ustawienie na jakim kanale będą wysyłane newsy z anime.")
+            ":two: Drugie menu to ustawienie na jakim kanale będą wysyłane newsy z anime. (Bardzo spamuje, lepiej nie włączać.)")
             .WithColor(Color.Red);
 
         var gamblingMenu = new SelectMenuBuilder()

@@ -30,7 +30,7 @@ public class TimerTasks
     public void StartTasks()
     {
         _logger.LogInformation("Registering tasks...");
-        _timerService.RegisterDailyTask(CookieClear, 11, 00);
+        _timerService.RegisterDailyTask(CookieClear, 11, 44);
         _timerService.RegisterDailyTask(TarotClear, 23, 00);
         _timerService.RegisterTask(AnimeInfo, TimeSpan.FromMinutes(10));
     }

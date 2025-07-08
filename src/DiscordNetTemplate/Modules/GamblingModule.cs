@@ -7,36 +7,75 @@ using DiscordNetTemplate.Db;
 using DiscordNetTemplate.Models;
 
 namespace DiscordNetTemplate.Modules;
-
 public class GamblingModule
 {
     private readonly DatabaseBotContext _db;
+    private readonly Random _random = new Random();
 
     public GamblingModule(DatabaseBotContext botContext)
     {
         _db = botContext;
     }
 
-    private readonly string[] symbols = { "🍒", "🍒", "🍒", "🍋", "🍋", "🍎", "🍎", ":strawberry:", ":strawberry:", "💎", "⭐" };
-
-    private readonly Dictionary<string, int> symbolValues = new Dictionary<string, int>
+    private static readonly List<(string Symbol, int Weight)> SymbolWeights = new List<(string Symbol, int Weight)>
     {
-        { "🍒", 2 },
-        { ":strawberry:", 4 },
-        { "🍋", 4 },
-        { "🍎", 6 },
-        { "💎", 14 },
-        { "⭐", 10 } 
+        ("🍒", 30),
+        (":lemon:", 25),
+        (":watermelon:", 15),
+        (":pineapple:", 12),
+        (":bell:", 10),
+        (":gem:", 5),
+        (":seven:", 2),
+        ("jackpot", 1)
     };
+
+    private readonly Dictionary<string, float> symbolValues = new()
+    {
+    { "🍒", 2f },
+    { ":lemon:", 4f },
+    { ":watermelon:", 6f },
+    { ":pineapple:", 8f },
+    { ":bell:", 10f },
+    { ":gem:", 20f },
+    { ":seven:", 50f },
+    { "jackpot", 500f }
+    };
+
+    private readonly Dictionary<string, float> symbolPartialMultipliers = new Dictionary<string, float>
+{
+    { "🍒", 0.4f },
+    { ":lemon:", 0.6f },
+    { ":watermelon:", 1.0f },
+    { ":pineapple:", 1.3f },
+    { ":bell:", 1.8f },
+    { ":gem:", 2.5f },
+    { ":seven:", 4.0f },
+    { "jackpot", 5.0f }
+};
+
+    private string GetRandomSymbol()
+    {
+        int totalWeight = SymbolWeights.Sum(s => s.Weight);
+        int roll = _random.Next(totalWeight);
+
+        int cumulative = 0;
+        foreach (var (symbol, weight) in SymbolWeights)
+        {
+            cumulative += weight;
+            if (roll < cumulative)
+                return symbol;
+        }
+
+        return SymbolWeights.Last().Symbol;
+    }
 
     public string[] GenerateFinalRoll()
     {
-        var random = new Random();
         string[] result = new string[3];
 
         for (int i = 0; i < 3; i++)
         {
-            result[i] = symbols[random.Next(symbols.Length)];
+            result[i] = GetRandomSymbol();
         }
 
         return result;
@@ -45,41 +84,56 @@ public class GamblingModule
     public string CheckWin(string[] finalRoll, int bet, ulong userId)
     {
         var symbolCount = finalRoll.GroupBy(s => s).ToDictionary(g => g.Key, g => g.Count());
+        int winAmount = 0;
+        string message = "";
 
         if (symbolCount.Count == 1)
         {
-            string winningSymbol = finalRoll[0];
-            int multiplier = symbolValues[winningSymbol] * 2;
-            bet *= multiplier;
-            var userMoney = _db.Users.FirstOrDefault(u => u.Id == userId).Money += bet;
-            _db.SaveChangesAsync();
-            return $"Gratulacje! Wszystkie symbole to {winningSymbol}! Wygrałeś {bet} żetonów! Twoja łączna ilość żetonów: {userMoney}";
+            string symbol = finalRoll[0];
+            float multiplier = symbolValues.ContainsKey(symbol) ? symbolValues[symbol] : 1f;
+
+            winAmount = (int)Math.Floor(bet * multiplier);
+
+            message = $"🎉 BIG WIN! Trafiłeś 3x {symbol}! Wygrywasz {winAmount} żetonów!";
+        }
+        else if (symbolCount.Any(kv => kv.Value == 2))
+        {
+            var pair = symbolCount.First(kv => kv.Value == 2).Key;
+            float multiplier = symbolPartialMultipliers.ContainsKey(pair) ? symbolPartialMultipliers[pair] : 0f;
+            winAmount = (int)Math.Floor(bet * multiplier);
+
+            if (winAmount == 0)
+                return "Masz dwa takie same symbole, ale są zbyt słabe, by coś wygrać.";
+
+            message = $":confetti_ball: Masz 2x {pair}! Wygrywasz {winAmount} żetonów!";
+        }
+        else
+        {
+            return "❌ Niestety, tym razem nic nie wygrałeś. Spróbuj ponownie!";
         }
 
-        if (symbolCount.Count == 2)
+        var user = _db.Users.FirstOrDefault(u => u.Id == userId);
+        if (user != null)
         {
-            var pairSymbol = symbolCount.FirstOrDefault(s => s.Value == 2).Key;
-            int multiplier = (int)Math.Round(symbolValues[pairSymbol] / 2.5f);
-            bet *= multiplier;
-            var userMoney = _db.Users.FirstOrDefault(u => u.Id == userId).Money += bet;
+            user.Money += winAmount;
             _db.SaveChangesAsync();
-            return $"Masz dwa takie same symbole! {pairSymbol} wygrywasz {bet} żetonów! Twoja łączna ilość żetonów: {userMoney}";
         }
-        return "Niestety, tym razem nic nie wygrałeś. Spróbuj ponownie!";
+
+        return $"{message} Twój nowy stan konta: {user?.Money ?? 0}";
     }
 
     public string AddMoney(ulong userId, int money)
     {
-        Random random = new Random();
-        double randomValue = random.NextDouble();
-
-        if (randomValue > 0.7)
+        if (_random.NextDouble() > 0.7)
         {
-            _db.Users.FirstOrDefault(u => u.Id == userId).Money += money;
-            _db.SaveChangesAsync();
-            return $"Wygrałeś {money} żetonów!";
+            var user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (user != null)
+            {
+                user.Money += money;
+                _db.SaveChangesAsync();
+                return $"🎁 Wygrałeś dodatkowe {money} żetonów!";
+            }
         }
-        else
-            return "";
+        return "";
     }
 }
