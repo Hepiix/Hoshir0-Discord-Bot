@@ -20,37 +20,37 @@ public class GamblingModule
     private static readonly List<(string Symbol, int Weight)> SymbolWeights = new List<(string Symbol, int Weight)>
     {
         ("🍒", 30),
-        (":lemon:", 25),
-        (":watermelon:", 15),
-        (":pineapple:", 12),
-        (":bell:", 10),
-        (":gem:", 5),
-        (":seven:", 2),
-        ("jackpot", 1)
+        (":lemon:", 27),
+        (":watermelon:", 20),
+        (":pineapple:", 17),
+        (":bell:", 12),
+        (":gem:", 9),
+        (":seven:", 5),
+        (":black_joker:", 2)
     };
 
     private readonly Dictionary<string, float> symbolValues = new()
     {
-    { "🍒", 2f },
-    { ":lemon:", 4f },
-    { ":watermelon:", 6f },
-    { ":pineapple:", 8f },
-    { ":bell:", 10f },
-    { ":gem:", 20f },
-    { ":seven:", 50f },
-    { "jackpot", 500f }
+    { "🍒", 3f },
+    { ":lemon:", 6f },
+    { ":watermelon:", 9f },
+    { ":pineapple:", 12f },
+    { ":bell:", 15f },
+    { ":gem:", 30f },
+    { ":seven:", 75f },
+    { ":black_joker:", 750f }
     };
 
     private readonly Dictionary<string, float> symbolPartialMultipliers = new Dictionary<string, float>
 {
-    { "🍒", 0.4f },
-    { ":lemon:", 0.6f },
-    { ":watermelon:", 1.0f },
-    { ":pineapple:", 1.3f },
-    { ":bell:", 1.8f },
-    { ":gem:", 2.5f },
-    { ":seven:", 4.0f },
-    { "jackpot", 5.0f }
+    { "🍒", 0.6f },
+    { ":lemon:", 0.8f },
+    { ":watermelon:", 1.2f },
+    { ":pineapple:", 1.5f },
+    { ":bell:", 2f },
+    { ":gem:", 2.7f },
+    { ":seven:", 4.2f },
+    { ":black_joker:", 5.2f }
 };
 
     private string GetRandomSymbol()
